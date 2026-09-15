@@ -31,10 +31,10 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d '{"content": "🚀 **OCI Provisioner (4-Hour Block) Initialized:** Starting polling loop..."}' \
+               -d '{"content": "**OCI Provisioner (4-Hour Block) Initialized:** Starting polling loop (160 attempts / 90s interval)..."}' \
                "$STATUS_DISCORD_WEBHOOK"
 
-      - name: Run script in a loop (90 second intervals)
+      - name: Run script in a loop (160 attempts / 90s delay)
         id: provision
         env:
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
@@ -61,12 +61,12 @@ jobs:
               exit 0
             fi
 
-            # Ping Discord every 10 attempts (every 15 minutes)
+            # Status ping every 10 attempts (every 15 minutes)
             if (( i % 10 == 0 )); then
-              ((ping_count++))
+              ping_count=$((ping_count + 1))
               curl -H "Content-Type: application/json" \
                    -X POST \
-                   -d "{\"content\": \"ℹ️ **OCI Poller Status Ping #$ping_count:** Still running normally.\"}" \
+                   -d "{\"content\": \"**OCI Poller Status Ping #$ping_count:** Still running normally.\"}" \
                    "$STATUS_DISCORD_WEBHOOK"
             fi
 
@@ -80,5 +80,5 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d '{"content": "🎉 **Oracle ARM Server Created Successfully!** Check your OCI dashboard."}' \
+               -d '{"content": "**Oracle ARM Server Created Successfully! Huzzah!** Check your OCI dashboard."}' \
                "$DISCORD_WEBHOOK"
