@@ -34,7 +34,7 @@ jobs:
                -d '{"content": "**OCI Provisioner (4-Hour Block) Initialized:** Starting polling loop (160 attempts / 90s interval)..."}' \
                "$STATUS_DISCORD_WEBHOOK"
 
-- name: Run script in a loop (160 attempts / 90s delay)
+      - name: Run script in a loop (160 attempts / 90s delay)
         id: provision
         env:
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
