@@ -1,0 +1,63 @@
+name: HOUR
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"   # Optional: runs automatically once every hour
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Create Private Key File
+        run: |
+          echo "${{ secrets.OCI_PRIVATE_KEY_FILENAME }}" > oracle_key.pem
+          chmod 600 oracle_key.pem
+
+      - name: Install dependencies
+        run: composer install --no-dev --prefer-dist --no-progress
+
+      - name: Run script in a loop (60 attempts over ~1 hour)
+        id: provision
+        env:
+          OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
+          OCI_TENANCY_ID: ${{ secrets.OCI_TENANCY_ID }}
+          OCI_KEY_FINGERPRINT: ${{ secrets.OCI_KEY_FINGERPRINT }}
+          OCI_PRIVATE_KEY_FILENAME: oracle_key.pem
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+          OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
+          OCI_IMAGE_ID: ${{ secrets.OCI_IMAGE_ID }}
+          OCI_OCPUS: ${{ secrets.OCI_OCPUS }}
+          OCI_MEMORY_IN_GBS: ${{ secrets.OCI_MEMORY_IN_GBS }}
+          OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
+          OCI_SHAPE: VM.Standard.A1.Flex
+        run: |
+          for i in {1..60}; do
+            echo "Attempt $i of 60..."
+            OUTPUT=$(php index.php)
+            echo "$OUTPUT"
+            
+            if [[ "$OUTPUT" != *"Out of host capacity"* && "$OUTPUT" != *"TooManyRequests"* && "$OUTPUT" != *"Error"* ]]; then
+              echo "SUCCESS=true" >> $GITHUB_ENV
+              exit 0
+            fi
+            sleep 60
+          done
+
+      - name: Notify Discord on Success
+        if: env.SUCCESS == 'true'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d '{"content": "🎉 **Oracle ARM Server Created Successfully!** Check your OCI dashboard."}' \
+               $DISCORD_WEBHOOK
