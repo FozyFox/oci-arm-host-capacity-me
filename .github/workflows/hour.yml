@@ -3,7 +3,7 @@ name: HOUR
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 */4 * * *"
 
 jobs:
   run:
@@ -31,10 +31,10 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d '{"content": "**OCI Provisioner (HOURS) Initialized:** Starting 60-attempt loop (~1 hour)..."}' \
-               $STATUS_DISCORD_WEBHOOK
+               -d '{"content": "🚀 **OCI Provisioner (4-Hour Block) Initialized:** Starting polling loop..."}' \
+               "$STATUS_DISCORD_WEBHOOK"
 
-      - name: Run script in a loop (60 attempts)
+      - name: Run script in a loop (240 attempts)
         id: provision
         env:
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
@@ -50,8 +50,9 @@ jobs:
           OCI_SHAPE: VM.Standard.A1.Flex
           STATUS_DISCORD_WEBHOOK: ${{ secrets.STATUS_DISCORD_WEBHOOK }}
         run: |
-          for i in {1..60}; do
-            echo "Attempt $i of 60..."
+          ping_count=0
+          for i in {1..240}; do
+            echo "Attempt $i of 240..."
             OUTPUT=$(php index.php)
             echo "$OUTPUT"
             
@@ -60,11 +61,11 @@ jobs:
               exit 0
             fi
 
-            # Status ping every 15 minutes
             if (( i % 15 == 0 )); then
+              ((ping_count++))
               curl -H "Content-Type: application/json" \
                    -X POST \
-                   -d "{\"content\": \"**OCI Poller Status:** Still running normally (Attempt $i/60 completed).\"}" \
+                   -d "{\"content\": \"ℹ️ **OCI Poller Status Ping #$ping_count:** Still running normally.\"}" \
                    "$STATUS_DISCORD_WEBHOOK"
             fi
 
@@ -78,5 +79,5 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d '{"content": "**Oracle ARM Server Created Successfully! Huzzah!** Check your OCI dashboard."}' \
-               $DISCORD_WEBHOOK
+               -d '{"content": "🎉 **Oracle ARM Server Created Successfully!** Check your OCI dashboard."}' \
+               "$DISCORD_WEBHOOK"
