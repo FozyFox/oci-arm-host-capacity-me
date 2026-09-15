@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "*/5 * * * *"
-    
+
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -24,6 +24,15 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-dev --prefer-dist --no-progress
+
+      - name: Send Initialization Status
+        env:
+          STATUS_DISCORD_WEBHOOK: ${{ secrets.STATUS_DISCORD_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d '{"content": "⚡ **OCI Provisioner Initialized:** Starting short polling loop (5 attempts)..."}' \
+               "$STATUS_DISCORD_WEBHOOK"
 
       - name: Run script in a loop
         id: provision
@@ -60,4 +69,4 @@ jobs:
           curl -H "Content-Type: application/json" \
                -X POST \
                -d '{"content": "🎉 **Oracle ARM Server Created Successfully!** Check your OCI dashboard."}' \
-               $DISCORD_WEBHOOK
+               "$DISCORD_WEBHOOK"
