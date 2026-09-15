@@ -40,17 +40,16 @@ jobs:
           OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
           OCI_SHAPE: VM.Standard.A1.Flex
         run: |
-          for i in {1..10}; do
+          for i in {1..5}; do
             echo "Attempt $i..."
             OUTPUT=$(php index.php)
             echo "$OUTPUT"
             
-            if [[ "$OUTPUT" != *"Out of host capacity"* && "$OUTPUT" != *"Error"* ]]; then
+            if [[ "$OUTPUT" != *"Out of host capacity"* && "$OUTPUT" != *"TooManyRequests"* && "$OUTPUT" != *"Error"* ]]; then
               echo "SUCCESS=true" >> $GITHUB_ENV
-              echo "LOG_OUTPUT=$OUTPUT" >> $GITHUB_ENV
               exit 0
             fi
-            sleep 30
+            sleep 60
           done
 
       - name: Notify Discord on Success
