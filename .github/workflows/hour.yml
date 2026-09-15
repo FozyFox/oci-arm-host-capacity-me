@@ -49,10 +49,25 @@ jobs:
           OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
           OCI_SHAPE: VM.Standard.A1.Flex
           STATUS_DISCORD_WEBHOOK: ${{ secrets.STATUS_DISCORD_WEBHOOK }}
+        - name: Run script in a loop (160 attempts / 90s delay)
+        id: provision
+        env:
+          OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
+          OCI_TENANCY_ID: ${{ secrets.OCI_TENANCY_ID }}
+          OCI_KEY_FINGERPRINT: ${{ secrets.OCI_KEY_FINGERPRINT }}
+          OCI_PRIVATE_KEY_FILENAME: oracle_key.pem
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+          OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
+          OCI_IMAGE_ID: ${{ secrets.OCI_IMAGE_ID }}
+          OCI_OCPUS: ${{ secrets.OCI_OCPUS }}
+          OCI_MEMORY_IN_GBS: ${{ secrets.OCI_MEMORY_IN_GBS }}
+          OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
+          OCI_SHAPE: VM.Standard.A1.Flex
+          STATUS_DISCORD_WEBHOOK: ${{ secrets.STATUS_DISCORD_WEBHOOK }}
         run: |
           ping_count=0
-          for i in {1..240}; do
-            echo "Attempt $i of 240..."
+          for i in {1..160}; do
+            echo "Attempt $i of 160..."
             OUTPUT=$(php index.php)
             echo "$OUTPUT"
             
@@ -61,7 +76,8 @@ jobs:
               exit 0
             fi
 
-            if (( i % 15 == 0 )); then
+            # Ping Discord every 10 attempts (every 15 minutes)
+            if (( i % 10 == 0 )); then
               ((ping_count++))
               curl -H "Content-Type: application/json" \
                    -X POST \
@@ -69,7 +85,7 @@ jobs:
                    "$STATUS_DISCORD_WEBHOOK"
             fi
 
-            sleep 60
+            sleep 90
           done
 
       - name: Notify Discord on Success
