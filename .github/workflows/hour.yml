@@ -31,7 +31,7 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d '{"content": "🚀 **OCI Provisioner (HOURS) Initialized:** Starting 60-attempt loop (~1 hour)..."}' \
+               -d '{"content": "**OCI Provisioner (HOURS) Initialized:** Starting 60-attempt loop (~1 hour)..."}' \
                $STATUS_DISCORD_WEBHOOK
 
       - name: Run script in a loop (60 attempts)
@@ -64,7 +64,7 @@ jobs:
             if (( i % 15 == 0 )); then
               curl -H "Content-Type: application/json" \
                    -X POST \
-                   -d "{\"content\": \"ℹ️ **OCI Poller Status:** Still running normally (Attempt $i/60 completed).\"}" \
+                   -d "{\"content\": \"**OCI Poller Status:** Still running normally (Attempt $i/60 completed).\"}" \
                    "$STATUS_DISCORD_WEBHOOK"
             fi
 
@@ -78,5 +78,5 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d '{"content": "🎉 **Oracle ARM Server Created Successfully!** Check your OCI dashboard."}' \
+               -d '{"content": "**Oracle ARM Server Created Successfully! Huzzah!** Check your OCI dashboard."}' \
                $DISCORD_WEBHOOK
