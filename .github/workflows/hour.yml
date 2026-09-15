@@ -3,7 +3,7 @@ name: HOUR
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"   # Optional: runs automatically once every hour
+    - cron: "0 * * * *"
 
 jobs:
   run:
@@ -25,7 +25,16 @@ jobs:
       - name: Install dependencies
         run: composer install --no-dev --prefer-dist --no-progress
 
-      - name: Run script in a loop (60 attempts over ~1 hour)
+      - name: Send Initialization Status
+        env:
+          STATUS_DISCORD_WEBHOOK: ${{ secrets.STATUS_DISCORD_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d '{"content": "🚀 **OCI Provisioner (HOURS) Initialized:** Starting 60-attempt loop (~1 hour)..."}' \
+               $STATUS_DISCORD_WEBHOOK
+
+      - name: Run script in a loop (60 attempts)
         id: provision
         env:
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
@@ -39,6 +48,7 @@ jobs:
           OCI_MEMORY_IN_GBS: ${{ secrets.OCI_MEMORY_IN_GBS }}
           OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
           OCI_SHAPE: VM.Standard.A1.Flex
+          STATUS_DISCORD_WEBHOOK: ${{ secrets.STATUS_DISCORD_WEBHOOK }}
         run: |
           for i in {1..60}; do
             echo "Attempt $i of 60..."
@@ -49,6 +59,15 @@ jobs:
               echo "SUCCESS=true" >> $GITHUB_ENV
               exit 0
             fi
+
+            # Status ping every 15 minutes
+            if (( i % 15 == 0 )); then
+              curl -H "Content-Type: application/json" \
+                   -X POST \
+                   -d "{\"content\": \"ℹ️ **OCI Poller Status:** Still running normally (Attempt $i/60 completed).\"}" \
+                   "$STATUS_DISCORD_WEBHOOK"
+            fi
+
             sleep 60
           done
 
