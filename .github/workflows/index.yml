@@ -26,6 +26,7 @@ jobs:
         run: composer install --no-dev --prefer-dist --no-progress
 
       - name: Run script in a loop
+        id: provision
         env:
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
           OCI_TENANCY_ID: ${{ secrets.OCI_TENANCY_ID }}
@@ -41,6 +42,23 @@ jobs:
         run: |
           for i in {1..10}; do
             echo "Attempt $i..."
-            php index.php
+            OUTPUT=$(php index.php)
+            echo "$OUTPUT"
+            
+            if [[ "$OUTPUT" != *"Out of host capacity"* && "$OUTPUT" != *"Error"* ]]; then
+              echo "SUCCESS=true" >> $GITHUB_ENV
+              echo "LOG_OUTPUT=$OUTPUT" >> $GITHUB_ENV
+              exit 0
+            fi
             sleep 30
           done
+
+      - name: Notify Discord on Success
+        if: env.SUCCESS == 'true'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d '{"content": "🎉 **Oracle ARM Server Created Successfully!** Check your OCI dashboard."}' \
+               $DISCORD_WEBHOOK
