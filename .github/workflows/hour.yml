@@ -34,7 +34,7 @@ jobs:
                -d '{"content": "**OCI Provisioner (4-Hour Block) Initialized:** Starting polling loop (160 attempts / 90s interval)..."}' \
                "$STATUS_DISCORD_WEBHOOK"
 
-      - name: Run script in a loop (160 attempts / 90s delay)
+- name: Run script in a loop (160 attempts / 90s delay)
         id: provision
         env:
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
@@ -62,15 +62,15 @@ jobs:
             fi
 
             # Status ping every 10 attempts (every 15 minutes)
-            if (( i % 10 == 0 )); then
+            if [ $((i % 10)) -eq 0 ]; then
               ping_count=$((ping_count + 1))
-              PAYLOAD=$(jq -n --arg msg "ℹ️ **OCI Poller Status Ping #$ping_count:** Still running normally." '{"content": $msg}')
+              PAYLOAD=$(jq -n --arg count "$ping_count" '{"content": ("ℹ️ **OCI Poller Status Ping #" + $count + ":** Still running normally.")}')
               curl -s -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$STATUS_DISCORD_WEBHOOK" || true
             fi
 
             sleep 90
           done
-
+          
       - name: Notify Discord on Success
         if: env.SUCCESS == 'true'
         env:
