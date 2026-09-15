@@ -31,7 +31,7 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d '{"content": "⚡ **OCI Provisioner Initialized:** Starting short polling loop (5 attempts)..."}' \
+               -d '{"content": "**OCI Provisioner Initialized:** Starting short polling loop (5 attempts)..."}' \
                "$STATUS_DISCORD_WEBHOOK"
 
       - name: Run script in a loop
@@ -68,5 +68,5 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d '{"content": "🎉 **Oracle ARM Server Created Successfully!** Check your OCI dashboard."}' \
+               -d '{"content": "**Oracle ARM Server Created Successfully! Huzzah!** Check your OCI dashboard."}' \
                "$DISCORD_WEBHOOK"
