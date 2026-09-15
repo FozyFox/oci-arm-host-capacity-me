@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: composer install --no-dev --prefer-dist --no-progress
 
-      - name: Run script
+      - name: Run script in a loop
         env:
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
           OCI_TENANCY_ID: ${{ secrets.OCI_TENANCY_ID }}
@@ -38,4 +38,9 @@ jobs:
           OCI_MEMORY_IN_GBS: ${{ secrets.OCI_MEMORY_IN_GBS }}
           OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
           OCI_SHAPE: VM.Standard.A1.Flex
-        run: php index.php
+        run: |
+          for i in {1..10}; do
+            echo "Attempt $i..."
+            php index.php
+            sleep 30
+          done
