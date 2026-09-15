@@ -64,10 +64,8 @@ jobs:
             # Status ping every 10 attempts (every 15 minutes)
             if (( i % 10 == 0 )); then
               ping_count=$((ping_count + 1))
-              curl -H "Content-Type: application/json" \
-                   -X POST \
-                   -d "{\"content\": \"**OCI Poller Status Ping #$ping_count:** Still running normally.\"}" \
-                   "$STATUS_DISCORD_WEBHOOK"
+              PAYLOAD=$(jq -n --arg msg "ℹ️ **OCI Poller Status Ping #$ping_count:** Still running normally." '{"content": $msg}')
+              curl -s -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$STATUS_DISCORD_WEBHOOK" || true
             fi
 
             sleep 90
